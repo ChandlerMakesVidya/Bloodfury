@@ -15,7 +15,7 @@ public class PlayerCamera : MonoBehaviour
     public float viewTiltIntensity = 2f;
     public float viewBobIntensity, viewBobSpeed;
 
-    float mouseX, mouseY, clamp, viewTilt, viewBob, _vb;
+    float mouseX, mouseY, clamp, viewTilt;
     Camera cam;
 
     private void Awake()
@@ -33,17 +33,11 @@ public class PlayerCamera : MonoBehaviour
     {
         mouseX = Input.GetAxisRaw("Mouse X") * mouseSens;
         mouseY += Input.GetAxisRaw("Mouse Y") * mouseSens;
-        if (Input.GetAxisRaw("Horizontal") != 0 || Input.GetAxisRaw("Vertical") != 0)
-            _vb += Time.deltaTime;
-        else
-            _vb = 0f;
 
         mouseY = Mathf.Clamp(mouseY, -90f, 90f);
         viewTilt = Mathf.Lerp(viewTilt, Input.GetAxisRaw("Horizontal") * viewTiltIntensity, 10f * Time.deltaTime);
-        viewBob = viewBobIntensity * Mathf.Sin(_vb * viewBobSpeed);
 
         transform.localRotation = Quaternion.Euler(-mouseY, 0f, -viewTilt);
-        //cam.transform.localPosition = new Vector3(0f, viewBob, 0f);
         //transform.parent.rotation = Quaternion.Euler(0f, mouseX, 0f);
         transform.parent.Rotate(0f, mouseX, 0f);
 

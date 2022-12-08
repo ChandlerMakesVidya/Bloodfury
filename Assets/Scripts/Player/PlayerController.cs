@@ -6,7 +6,7 @@ using UnityEngine;
 /// Name: Player Controller
 /// Description: Handles player control of player character.
 /// Date Created: 11/01/22
-/// Date Updated: 11/25/22
+/// Date Updated: 12/05/22
 /// </summary>
 /// 
 
@@ -56,19 +56,21 @@ public class PlayerController : MonoBehaviour
     float standHeight, camCenterMultiplier = 0.9375f, height, center;
     bool crouching;
 
-    float maxSpeed, prevMaxSpeed, dodgeCooldown = 0.5f, timeToNextDodge, dodgeTime = 0.1f, dodgeStateTime;
+    float maxSpeed, prevMaxSpeed;
+    float dodgeCooldown, dodgeTime; //HARDCODED
     bool justAirborne, grounded, validGround;
     Vector3 wishDir, velocity, prevVelocity, gravVelocity, groundNormal;
 
     float hori, vert;
+    float viewBob, _vb;
 
     CharacterController charControl;
-    Transform head;
+    PlayerCamera head;
 
     private void Awake()
     {
         charControl = GetComponent<CharacterController>();
-        head = GetComponentInChildren<PlayerCamera>().transform;
+        head = GetComponentInChildren<PlayerCamera>();
     }
 
     private void Start()
@@ -81,7 +83,8 @@ public class PlayerController : MonoBehaviour
 
         maxSpeed = moveSpeed;
         prevMaxSpeed = maxSpeed;
-        timeToNextDodge = 0f;
+        dodgeTime = 0f;
+        dodgeCooldown = 0f;
         standHeight = charControl.height;
         slideJumpTimer = crouchTime;
     }
@@ -117,6 +120,12 @@ public class PlayerController : MonoBehaviour
         wishDir = Vector3.ClampMagnitude(transform.forward * vert + transform.right * hori, 1.0f);
         wishDir = Vector3.ProjectOnPlane(wishDir, groundNormal);
 
+        if (wishDir.magnitude != 0f)
+            _vb += Time.deltaTime;
+        else
+            _vb = 0f;
+        viewBob = head.viewBobIntensity * Mathf.Sin(_vb * head.viewBobSpeed);
+
         //crouching height
         //height = crouching ? crouchHeight : standHeight;
         if (Input.GetButton("Crouch"))
@@ -133,7 +142,10 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        if (Time.time >= dodgeStateTime)
+        dodgeTime -= Time.deltaTime;
+        dodgeCooldown -= Time.deltaTime;
+
+        if (dodgeTime <= 0f)
         {
             prevMaxSpeed = maxSpeed;
             maxSpeed = velocity.magnitude > moveSpeed ? velocity.magnitude : moveSpeed;
@@ -143,14 +155,14 @@ public class PlayerController : MonoBehaviour
             }
 
             prevVelocity = new Vector3(charControl.velocity.x, 0f, charControl.velocity.z);
-            if (!grounded /*|| jumpGrace > 0f*/)
+            if (!grounded)
             {
                 //uncomment this to disable dash jumping
-                //if (justDodged) velocity = velocity.normalized * moveSpeed;
+                //if (justDodged) velocity = velocity.normalized * (dashSpeed / 2);
 
                 velocity = prevVelocity;
                 //velocity.y = 0f; //fixes eternal jumping bug
-                velocity += wishDir * airAcceleration * Time.deltaTime;
+                velocity += wishDir * (!crouching ? airAcceleration : crouchSpeed) * Time.deltaTime;
                 if (!justAirborne & gravVelocity.y < 0) gravVelocity = Vector3.zero;
                 gravVelocity += Physics.gravity * Time.deltaTime;
                 justAirborne = true;
@@ -158,19 +170,19 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                if (!crouching && Time.time >= timeToNextDodge && Input.GetButtonDown("Dodge"))
+                if (!crouching && dodgeCooldown <= 0f && Input.GetButtonDown("Dodge"))
                 {
                     maxSpeed = dashSpeed;
                     velocity = (wishDir.magnitude > float.Epsilon ? wishDir : Vector3.ProjectOnPlane(transform.forward, groundNormal)) * dashSpeed;
-                    timeToNextDodge = Time.time + dodgeCooldown;
-                    dodgeStateTime = Time.time + dodgeTime;
+                    dodgeTime = 0.1f;
+                    dodgeCooldown = 0.5f;
                 }
                 else if(!justAirborne)
                 {
                     if (crouching)
                     {
                         velocity = Vector3.Lerp(prevVelocity, wishDir * crouchSpeed,
-                            (prevVelocity.magnitude > crouchSpeed ? 1f : 12f) * Time.deltaTime);
+                            (prevVelocity.magnitude > crouchSpeed & Input.GetButton("Crouch") ? 1f : 12f) * Time.deltaTime);
                     } else velocity = Vector3.Lerp(prevVelocity, wishDir * moveSpeed, 20f * Time.deltaTime);
                 }
                 justAirborne = false;
@@ -185,8 +197,9 @@ public class PlayerController : MonoBehaviour
                         if (slideJumpTimer > 0f)
                         {
                             maxSpeed += speedGain;
+                            //yes, you can instantly change your direction of momentum without any speed loss
+                            //yes, this is intentional
                             velocity = (wishDir.magnitude > float.Epsilon ? wishDir * maxSpeed : velocity.normalized * velocity.magnitude);
-                            //velocity = velocity.normalized * maxSpeed;
                             slideJumpTimer = 0f;
                         }
                     }
@@ -209,8 +222,8 @@ public class PlayerController : MonoBehaviour
         {
             charControl.height = Mathf.Lerp(charControl.height, height, crouchTime * 60 * Time.deltaTime);
             charControl.center = Vector3.Lerp(charControl.center, new Vector3(0, center, 0), crouchTime * 60 * Time.deltaTime);
-            head.localPosition = new Vector3(0f, charControl.height * camCenterMultiplier, 0f);
         }
+        head.transform.localPosition = new Vector3(0f, charControl.height * camCenterMultiplier + (grounded ? viewBob : 0f), 0f);
 
         if (velocity.magnitude > maxSpeed)
         {
