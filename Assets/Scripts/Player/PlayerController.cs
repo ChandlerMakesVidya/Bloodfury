@@ -5,15 +5,13 @@ using UnityEngine;
 /// <summary>
 /// Name: Player Controller
 /// Description: Handles player control of player character.
-/// Date Created: 11/01/22
-/// Date Updated: 12/05/22
+/// Use: Put on Player object, there ought to be only one of these.
 /// </summary>
 /// 
 
 /// todo:
 /// dashing away from slopes: keep player on slope
 /// sliding down steep slopes
-/// prevent standing from crouch if terrain does not permit
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
@@ -45,8 +43,8 @@ public class PlayerController : MonoBehaviour
     [Tooltip("The player's height while crouching")]
     [SerializeField] float crouchHeight = 0.75f;
 
-    [Tooltip("Time it takes to transition between standing and crouching.")]
-    [SerializeField] float crouchTime = 0.2f;
+    [Tooltip("Amount of time after initiating a crouch you can do a slide jump.")]
+    [SerializeField] float crouchTime = 0.5f;
 
     float slideJumpTimer;
 
@@ -182,7 +180,7 @@ public class PlayerController : MonoBehaviour
                     if (crouching)
                     {
                         velocity = Vector3.Lerp(prevVelocity, wishDir * crouchSpeed,
-                            (prevVelocity.magnitude > crouchSpeed & Input.GetButton("Crouch") ? 1f : 12f) * Time.deltaTime);
+                            (prevVelocity.magnitude > crouchSpeed & Input.GetButton("Crouch") ? 1.5f : 12f) * Time.deltaTime);
                     } else velocity = Vector3.Lerp(prevVelocity, wishDir * moveSpeed, 20f * Time.deltaTime);
                 }
                 justAirborne = false;
@@ -220,8 +218,8 @@ public class PlayerController : MonoBehaviour
 
         if(charControl.height != height)
         {
-            charControl.height = Mathf.Lerp(charControl.height, height, crouchTime * 60 * Time.deltaTime);
-            charControl.center = Vector3.Lerp(charControl.center, new Vector3(0, center, 0), crouchTime * 60 * Time.deltaTime);
+            charControl.height = Mathf.Lerp(charControl.height, height, 12 * Time.deltaTime);
+            charControl.center = Vector3.Lerp(charControl.center, new Vector3(0, center, 0), 12 * Time.deltaTime);
         }
         head.transform.localPosition = new Vector3(0f, charControl.height * camCenterMultiplier + (grounded ? viewBob : 0f), 0f);
 
@@ -250,5 +248,10 @@ public class PlayerController : MonoBehaviour
         }
 
 
+        Rigidbody body = hit.collider.attachedRigidbody;
+        if (body == null || body.isKinematic) return;
+        if (hit.moveDirection.y < -0.3f) return;
+        Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+        body.AddForce(pushDir * 2, ForceMode.Impulse);
     }
 }

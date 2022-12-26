@@ -16,12 +16,7 @@ public class PlayerCamera : MonoBehaviour
     public float viewBobIntensity, viewBobSpeed;
 
     float mouseX, mouseY, clamp, viewTilt;
-    Camera cam;
-
-    private void Awake()
-    {
-        cam = GetComponentInChildren<Camera>();
-    }
+    [SerializeField] Transform knockObject;
 
     private void Start()
     {
@@ -41,9 +36,9 @@ public class PlayerCamera : MonoBehaviour
         //transform.parent.rotation = Quaternion.Euler(0f, mouseX, 0f);
         transform.parent.Rotate(0f, mouseX, 0f);
 
-        if(cam.transform.localEulerAngles.magnitude != 0f)
+        if(knockObject.localEulerAngles.magnitude != 0f)
         {
-            cam.transform.localRotation = Quaternion.Lerp(cam.transform.localRotation, Quaternion.identity, 15f * Time.deltaTime);
+            knockObject.localRotation = Quaternion.Lerp(knockObject.transform.localRotation, Quaternion.identity, 15f * Time.deltaTime);
         }
 
         //!!!DEBUG FUNCTION, REMOVE LATER!!!
@@ -57,6 +52,6 @@ public class PlayerCamera : MonoBehaviour
     {
         Vector3 dir = Random.insideUnitCircle * power;
         dir.z = Random.Range(-1f, 1f) * power;
-        cam.transform.localEulerAngles += dir;
+        knockObject.localEulerAngles += dir;
     }
 }

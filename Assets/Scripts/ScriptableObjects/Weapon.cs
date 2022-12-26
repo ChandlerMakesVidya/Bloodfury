@@ -6,6 +6,11 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
+/// <summary>
+/// Name: Weapon
+/// Description: Data object for a weapon.
+/// </summary>
+
 public enum weaponType
 {
     Melee, Projectile, Custom, Hitscan, HitscanSlowMoProjectile
@@ -17,21 +22,22 @@ public class Weapon : ScriptableObject
     public string weaponName;
     public int weaponID;
     public weaponType type;
-    public GameObject worldPrefab;
+    public GameObject pickupPrefab;
+    public AnimatorOverrideController animatorOverride;
     [Space]
 
-    float baseDamage;
-    float attackCooldown;
-    float switchDowntime;
+    [HideInInspector] public int baseDamage;
+    [HideInInspector] public float attackCooldown;
+    [HideInInspector] public float switchDowntime;
 
-    float reach;
+    [HideInInspector] public float reach;
 
-    GameObject projectile;
-    int bulletsPerShot;
-    int ammo;
-    int reserve;
-    float spread;
-    bool automatic;
+    [HideInInspector] public GameObject projectile;
+    [HideInInspector] public int bulletsPerShot;
+    [HideInInspector] public int ammo;
+    [HideInInspector] public int reserve;
+    [HideInInspector] public float spread;
+    [HideInInspector] public bool automatic;
 
     #region Editor
 #if UNITY_EDITOR
@@ -49,7 +55,7 @@ public class Weapon : ScriptableObject
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Base Damage", GUILayout.MaxWidth(80));
-            weapon.baseDamage = EditorGUILayout.FloatField(weapon.baseDamage);
+            weapon.baseDamage = EditorGUILayout.IntField(weapon.baseDamage);
 
             EditorGUILayout.LabelField("Attack Cooldown", GUILayout.MaxWidth(100));
             weapon.attackCooldown = EditorGUILayout.FloatField(weapon.attackCooldown);

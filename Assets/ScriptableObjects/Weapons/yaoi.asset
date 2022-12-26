@@ -16,3 +16,13 @@ MonoBehaviour:
   weaponID: 42069
   type: 0
   worldPrefab: {fileID: 0}
+  baseDamage: 9999999
+  attackCooldown: 0.33
+  switchDowntime: 0.2
+  reach: 1.5
+  projectile: {fileID: 0}
+  bulletsPerShot: 0
+  ammo: 0
+  reserve: 0
+  spread: 0
+  automatic: 0

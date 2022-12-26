@@ -11,10 +11,10 @@ TagManager:
   - Enviroment
   - Water
   - UI
-  - NPC
-  - 
-  - 
-  - 
+  - Character
+  - Weapon
+  - Bullet
+  - Viewmodel
   - 
   - 
   - 
